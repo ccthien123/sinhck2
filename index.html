@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ôn tập Sinh Học 12 - Học Kì II</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --correct: #10b981;
+            --correct-bg: #d1fae5;
+            --incorrect: #ef4444;
+            --incorrect-bg: #fee2e2;
+            --text-main: #1f2937;
+            --border-radius: 8px;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            padding-bottom: 80px; /* Thêm khoảng trống dưới đáy để không bị menu che khuất */
+        }
+        .container { max-width: 850px; margin: 0 auto; }
+        
+        .header-panel {
+            background: var(--card-bg); padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        h1 { margin-top: 0; color: var(--primary); font-size: 24px; text-align: center; }
+        .stats {
+            display: flex; justify-content: space-between; font-size: 18px;
+            font-weight: bold; margin-bottom: 15px; padding: 10px;
+            background: #e0e7ff; border-radius: var(--border-radius); color: #4338ca;
+        }
+        
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin: 30px 0 15px 0; border-bottom: 2px solid var(--primary); padding-bottom: 10px;
+            flex-wrap: wrap; gap: 10px;
+            scroll-margin-top: 20px; /* Tạo khoảng cách vừa vặn khi cuộn tới */
+        }
+        .section-header h2 { margin: 0; color: var(--primary); font-size: 20px; }
+        .controls { display: flex; gap: 8px; }
+        
+        button {
+            padding: 8px 16px; border: none; border-radius: 5px;
+            font-weight: bold; cursor: pointer; transition: all 0.2s;
+            background-color: #e5e7eb; color: #4b5563;
+        }
+        button:hover { opacity: 0.9; }
+        .btn-action { background-color: var(--primary); color: white; }
+        
+        .question-card {
+            background: var(--card-bg); padding: 20px;
+            border-radius: var(--border-radius); box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .question-text { font-weight: bold; font-size: 17px; margin-bottom: 15px; }
+        
+        .option {
+            padding: 12px 15px; margin-bottom: 8px; border: 1px solid #d1d5db;
+            border-radius: var(--border-radius); cursor: pointer; transition: background 0.2s;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .option:hover { background-color: #f9fafb; }
+        .option.correct { background-color: var(--correct-bg); border-color: var(--correct); color: #065f46; font-weight: bold; }
+        .option.incorrect { background-color: var(--incorrect-bg); border-color: var(--incorrect); color: #991b1b; }
+        
+        .tf-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px; margin-bottom: 8px; border: 1px solid #d1d5db; border-radius: var(--border-radius);
+        }
+        .tf-text { flex: 1; padding-right: 15px; }
+        .tf-controls { display: flex; gap: 8px; align-items: center; }
+        .tf-btn { padding: 6px 12px; border: 1px solid #d1d5db; background: white; transition: 0.2s; }
+        .tf-btn.selected-correct { background-color: var(--correct-bg) !important; border-color: var(--correct) !important; color: #065f46 !important; }
+        .tf-btn.selected-incorrect { background-color: var(--incorrect-bg) !important; border-color: var(--incorrect) !important; color: #991b1b !important; }
+
+        .sa-wrap { display: flex; gap: 10px; align-items: center; }
+        .sa-input {
+            flex: 1; padding: 10px; border: 1px solid #d1d5db;
+            border-radius: 5px; font-size: 16px; outline: none;
+        }
+        .sa-input:focus { border-color: var(--primary); }
+        .sa-input.correct { background-color: var(--correct-bg); border-color: var(--correct); color: #065f46; font-weight:bold; }
+        .sa-input.incorrect { background-color: var(--incorrect-bg); border-color: var(--incorrect); color: #991b1b; font-weight:bold; }
+        
+        .icon { font-weight: bold; font-size: 18px; }
+        .correct-icon { color: var(--correct); }
+        .incorrect-icon { color: var(--incorrect); }
+        
+        .explanation {
+            margin-top: 15px; padding: 15px; background-color: #f0fdf4;
+            border-left: 4px solid var(--correct); border-radius: 4px;
+            display: none; font-size: 15px;
+        }
+
+        /* Menu điều hướng nổi */
+        .floating-nav {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+        .floating-nav button {
+            background-color: var(--primary);
+            color: white;
+            border-radius: 20px;
+            padding: 10px 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            opacity: 0.85;
+        }
+        .floating-nav button:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 768px) {
+            .tf-row { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .tf-controls { width: 100%; justify-content: flex-end; }
+            
+            /* Responsive cho Menu điều hướng trên điện thoại */
+            .floating-nav {
+                flex-direction: row;
+                bottom: 15px;
+                right: 50%;
+                transform: translateX(50%);
+                width: max-content;
+                background: white;
+                padding: 6px;
+                border-radius: 25px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            }
+            .floating-nav button {
+                padding: 8px 12px;
+                font-size: 13px;
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-panel">
+        <h1>ÔN TẬP SINH HỌC 12 - HỌC KÌ II</h1>        
+        <div class="stats">
+            <span>Đã làm: <span id="answered-count">0</span>/<span id="total-count">0</span></span>
+            <span>Điểm: <span id="score-count">0</span></span>
+        </div>
+        <div style="text-align: center; color: #6b7280; font-size: 14px;">
+            Nhấp vào đáp án để kiểm tra. Nhấp lại lần nữa để bỏ chọn (làm lại).
+        </div>
+    </div>
+
+    <!-- PHẦN I (Có gắn id="phan1" để cuộn tới) -->
+    <div class="section-header" id="phan1">
+        <h2>Phần I. Trắc nghiệm nhiều lựa chọn</h2>
+        <div class="controls">
+            <button id="btn-orig-mcq" class="btn-action" onclick="setMode('mcq', 'original')">Thứ tự gốc</button>
+            <button id="btn-rand-mcq" onclick="setMode('mcq', 'random')">Đảo ngẫu nhiên</button>
+        </div>
+    </div>
+    <div id="mcq-container"></div>
+
+    <!-- PHẦN II (Có gắn id="phan2" để cuộn tới) -->
+    <div class="section-header" id="phan2">
+        <h2>Phần II. Trắc nghiệm Đúng/Sai</h2>
+        <div class="controls">
+            <button id="btn-orig-tf" class="btn-action" onclick="setMode('tf', 'original')">Thứ tự gốc</button>
+            <button id="btn-rand-tf" onclick="setMode('tf', 'random')">Đảo ngẫu nhiên</button>
+        </div>
+    </div>
+    <div id="tf-container"></div>
+
+    <!-- PHẦN III (Có gắn id="phan3" để cuộn tới) -->
+    <div class="section-header" id="phan3">
+        <h2>Phần III. Câu hỏi trả lời ngắn</h2>
+        <div class="controls">
+            <button id="btn-orig-sa" class="btn-action" onclick="setMode('sa', 'original')">Thứ tự gốc</button>
+            <button id="btn-rand-sa" onclick="setMode('sa', 'random')">Đảo ngẫu nhiên</button>
+        </div>
+    </div>
+    <div id="sa-container"></div>
+</div>
+
+<!-- Nút Menu nổi nằm ngoài khung container -->
+<div class="floating-nav">
+    <button onclick="document.getElementById('phan1').scrollIntoView({behavior: 'smooth'})">Phần I</button>
+    <button onclick="document.getElementById('phan2').scrollIntoView({behavior: 'smooth'})">Phần II</button>
+    <button onclick="document.getElementById('phan3').scrollIntoView({behavior: 'smooth'})">Phần III</button>
+    <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆ Lên đầu</button>
+</div>
+
+<script>
+   // ==========================================
+    // DỮ LIỆU CÂU HỎI (VIẾT ĐẦY ĐỦ 100% KHÔNG BỎ CHỮ)
+    // ==========================================
+    const rawMCQ = [
+        { q: "Môi trường sống của sinh vật gồm có:", opts: ["A. Đất - nước - không khí", "B. Đất - nước - không khí - sinh vật", "C. Đất - nước - không khí - trên cạn", "D. Đất - nước - trên cạn - sinh vật"], ans: 3, expl: "Theo đáp án đề cương, môi trường sống gồm đất, nước, trên cạn và sinh vật." },
+        { q: "Các nhân tố sinh thái được chia thành hai nhóm sau:", opts: ["A. Nhóm nhân tố sinh thái sinh vật và con người.", "B. Nhóm nhân tố sinh thái vô sinh và hữu sinh", "C. Nhóm nhân tố sinh thái trên cạn và dưới nước.", "D. Nhóm nhân tố sinh thái bất lợi và có lợi."], ans: 1, expl: "Nhân tố sinh thái gồm 2 nhóm chính: Vô sinh và Hữu sinh." },
+        { q: "Loài chuột cát ở đài nguyên có giới hạn chịu nhiệt từ -50°C đến +30°C và có khoảng thuận lợi từ 0°C đến 20°C. Ví dụ đã cho nói đến quy luật sinh thái nào?", opts: ["A. Tác động qua lại giữa sinh vật với môi trường.", "B. Quy luật giới hạn sinh thái.", "C. Quy luật tác động không đồng đều của các nhân tố sinh thái.", "D. Quy luật tác động tổng hợp của các nhân tố sinh thái."], ans: 1, expl: "Khoảng giá trị xác định của một nhân tố sinh thái mà sinh vật tồn tại được gọi là giới hạn sinh thái." },
+        { q: "“Khi trồng rau xanh, cần phải bón phân đạm để lá phát triển tốt. Trong lúc trồng cây lấy củ thì đạm chỉ cần cho giai đoạn đầu, sau đó cần bón kali”. Đây là ứng dụng quy luật sinh thái cơ bản nào?", opts: ["A. Quy luật giới hạn sinh thái.", "B. Quy luật tác động qua lại giữa sinh vật với môi trường.", "C. Quy luật tác động tổng hợp các nhân tố sinh thái.", "D. Quy luật tác động không đồng đều của các nhân tố sinh thái."], ans: 3, expl: "Mỗi giai đoạn phát triển, nhu cầu của sinh vật với cùng một nhân tố sinh thái là không giống nhau." },
+        { q: "Nhịp sinh học là", opts: ["A. khả năng phản ứng của sinh vật trước sự thay đổi nhất thời của môi trường.", "B. khả năng phản ứng của sinh vật trước sự thay đổi mang tính chu kì của môi trường.", "C. khả năng phản ứng của sinh vật một cách nhịp nhàng trước sự thay đổi theo chu kì của môi trường.", "D. sự thay đổi theo chu kì của sinh vật trước môi trường."], ans: 2, expl: "Nhịp sinh học là sự thích nghi của sinh vật qua những phản ứng nhịp nhàng với chu kì môi trường." },
+        { q: "Ứng dụng sự thích nghi của cây trồng đối với nhân tố ánh sáng, người ta đã trồng xen các loại cây theo trình tự sau:", opts: ["A. Cây ưa sáng trồng trước, cây ưa bóng trồng sau", "B. Cây ưa bóng trồng trước, cây ưa sáng trồng sau", "C. Trồng đồng thời nhiều loại cây", "D. Không trồng cả 2 loại cây vào một chỗ"], ans: 0, expl: "Cây ưa sáng cần không gian trực tiếp nên trồng trước tạo tán, sau đó trồng cây ưa bóng bên dưới." },
+        { q: "Nhiệt độ tác động đến", opts: ["A. Hình thái, cấu trúc cơ thể, tuổi thọ, các hoạt động sinh lí- sinh thái và tập tính của sinh vật.", "B. Đã ảnh hưởng tới hoạt động, khả năng sinh trưởng, sinh sản.", "C. Hoạt động kiếm ăn, khả năng sinh trưởng, sinh sản.", "D. Ảnh hưởng tới hoạt động, khả năng sinh trưởng, sinh sản, tạo điều kiện cho động vật nhận biết các vật, định hướng di chuyển trong không gian."], ans: 0, expl: "Nhiệt độ tác động toàn diện lên sinh vật từ hình thái, cấu trúc, đến sinh lí và tập tính." },
+        { q: "Quần thể là một tập hợp cá thể", opts: ["A. cùng loài, sống trong 1 khoảng không gian xác định, có khả năng sinh sản tạo thế hệ mới.", "B. khác loài, sống trong 1 khoảng không gian xác định, vào 1 thời điểm xác định.", "C. cùng loài, cùng sống trong 1 khoảng không gian xác định, vào 1 thời điểm xác định.", "D. cùng loài, cùng sống trong 1 khoảng không gian xác định, vào 1 thời điểm xác định, có khả năng sinh sản tạo thế hệ mới."], ans: 3, expl: "Định nghĩa chuẩn của quần thể bao gồm 4 yếu tố: Cùng loài, cùng không gian, cùng thời điểm, có khả năng sinh sản." },
+        { q: "Hiện tượng liền rễ ở các cây thông thể hiện mối quan hệ", opts: ["A. hỗ trợ.", "B. cạnh tranh.", "C. cộng sinh.", "D. hợp tác."], ans: 0, expl: "Liền rễ giúp các cá thể thông cùng loài chia sẻ dinh dưỡng và nước, là biểu hiện của quan hệ hỗ trợ." },
+        { q: "Vào mùa sinh sản, các cá thể cái trong quần thể cò tranh giành nhau nơi thuận lợi để làm tổ. Đây là ví dụ về mối quan hệ", opts: ["A. Hỗ trợ cùng loài.", "B. Cạnh tranh cùng loài.", "C. Hội sinh.", "D. Hợp tác."], ans: 1, expl: "Sự tranh giành nơi ở, thức ăn, bạn tình giữa các cá thể cùng một loài là cạnh tranh cùng loài." },
+        { q: "Tỉ lệ giới tính là?", opts: ["A. tỉ số giữa số lượng cá thể đực và cá thể cái trong quần thể.", "B. tỉ số giữa số lượng cá thể đực trên tổng số cá thể trong quần thể.", "C. tỉ số giữa số lượng cá thể cái trên tổng số cá thể trong quần thể.", "D. không xác định được vì chúng thay đổi liên tục."], ans: 0, expl: "Tỉ lệ giới tính được biểu diễn bằng tỉ số đực/cái, giúp quần thể duy trì hiệu quả sinh sản." },
+        { q: "Phần lớn quần thể sinh vật trong tự nhiên tăng trưởng theo dạng", opts: ["A. tăng dần đều.", "B. đường cong chữ J.", "C. đường cong chữ S.", "D. giảm dần đều."], ans: 2, expl: "Trong môi trường có giới hạn nguồn sống, quần thể tăng trưởng theo đường cong chữ S." },
+        { q: "Quần thể sẽ tăng trưởng kích thước theo đồ thị dạng chữ J trong điều kiện:", opts: ["A. Khả năng cung cấp điều kiện sống không tốt, sự di cư theo mùa thường xuyên xảy ra.", "B. Khả năng cung cấp điều kiện sống không tốt, hạn chế khả năng sinh sản của quần thể.", "C. Khả năng cung cấp điều kiện sống đầy đủ, hoàn toàn thỏa mãn nhu cầu phát triển của quần thể.", "D. Điều kiện thức ăn đầy đủ, không gian cư trú bị giới hạn gây nên sự biến động số lượng cá thể."], ans: 2, expl: "Tăng trưởng theo chữ J (tiềm năng sinh học) chỉ xảy ra ở môi trường lý tưởng, không bị giới hạn." },
+        { q: "Nếu như trong một mẻ lưới đánh cá ở hồ thu được số lượng cá con nhiều hơn, còn cá lớn thì rất ít, điều đó chứng tỏ:", opts: ["A. Cá đang bước vào thời kì sinh sản.", "B. Nghề cá đang khai thác hiệu quả.", "C. Nghề cá chưa khai thác hết tiềm năng.", "D. Nghề cá đang rơi vào tình trạng khai thác quá mức."], ans: 3, expl: "Tháp tuổi có đáy rộng, đỉnh thu hẹp mạnh (nhiều cá con, ít cá lớn) chứng tỏ cá đã bị khai thác cạn kiệt ở các độ tuổi lớn." },
+        { q: "Trong một ao nuôi cá trắm cỏ, người ta tính được trung bình có 3 con/m2 nước. Số liệu trên cho biết về đặc trưng nào của quần thể?", opts: ["A. Sự phân bố cá thể.", "B. Mật độ cá thể.", "C. Tỷ lệ đực/cái.", "D. Thành phần nhóm tuổi."], ans: 1, expl: "Mật độ là số lượng cá thể trên một đơn vị diện tích hoặc thể tích (3 con/m2)." },
+        { q: "Sự phân bố theo nhóm cá thể trong quần thể có ý nghĩa gì?", opts: ["A. Làm giảm sự cạnh tranh gay gắt giữa các cá thể.", "B. Làm tăng sự cạnh tranh gay gắt giữa các cá thể.", "C. Giúp sinh vật tận dụng được nguồn sống từ môi trường.", "D. Giúp sinh vật hỗ trợ nhau chống chọi với bất lợi từ môi trường."], ans: 3, expl: "Phân bố theo nhóm thường gặp khi điều kiện sống không đồng đều, giúp các cá thể quần tụ hỗ trợ nhau." },
+        { q: "Về mặt sinh thái, sự phân bố đồng đều của cá thể cùng loài trong khu vực phân bố có ý nghĩa:", opts: ["A. Tăng khả năng khai thác nguồn sống tiềm tàng từ môi trường.", "B. Tăng cường cạnh tranh nhau dẫn tới làm tăng tốc độ tiến hóa của loài.", "C. Hỗ trợ lẫn nhau để chống chọi với điều kiện bất lợi của môi trường.", "D. Giảm sự cạnh tranh gay gắt giữa các cá thể trong quần thể."], ans: 3, expl: "Phân bố đồng đều giúp duy trì khoảng cách an toàn, tránh cạnh tranh quá mức khi nguồn sống phân bố đều." },
+        { q: "Cho sơ đồ các nhân tố chi phối kích thước quần thể, biết (1) là Mức sinh sản, chọn phương án đúng", img: "cau18_mcq.png", opts: ["A. (2) là mức tử vong, (3) là mức nhập cư, (4) là mức xuất cư.", "B. (4) là mức tử vong, (2) là mức nhập cư, (3) là mức xuất cư.", "C. (3) là mức tử vong, (4) là mức nhập cư, (2) là mức xuất cư", "D. (3) là mức tử vong, (2) là mức nhập cư, (4) là mức xuất cư"], ans: 2, expl: "Sinh sản và Nhập cư làm tăng kích thước (mũi tên đi vào). Tử vong và Xuất cư làm giảm (mũi tên đi ra)." },
+        { q: "Chuồn chuồn, ve sầu… có số lượng nhiều vào các tháng xuân hè nhưng rất ít vào những tháng mùa đông, thuộc dạng biến động số lượng nào sau đây?", opts: ["A. Không theo chu kỳ", "B. Theo chu kỳ ngày đêm", "C. Theo chu kỳ tháng", "D. Theo chu kỳ mùa"], ans: 3, expl: "Sự thay đổi gắn liền với sự luân phiên xuân hè - mùa đông là biến động theo chu kỳ mùa." },
+        { q: "Quần thể được điều chỉnh về mức cân bằng khi", opts: ["A. mật độ cá thể giảm xuống quá thấp hoặc tăng lên quá cao", "B. môi trường sống thuận lợi, thức ăn dồi dào, ít kẻ thù", "C. mật độ cá thể tăng lên quá cao dẫn đến thiếu thức ăn, nơi ở", "D. mật độ cá thể giảm xuống quá thấp đe dọa sự tồn tại của quần thể"], ans: 0, expl: "Cơ chế tự điều chỉnh của quần thể hoạt động khi mật độ thay đổi quá lớn (lên cao hoặc xuống thấp) so với sức chứa của môi trường." },
+        { q: "Dạng biến động số lượng cá thể nào sau đây thuộc dạng không theo chu kỳ?", opts: ["A. Nhiệt độ tăng đột ngột làm sâu bọ trên đồng cỏ chết hàng loạt.", "B. Trung bình khoảng 7 năm cá cơm ở vùng biển Peru chết hàng loạt.", "C. Số lượng tảo trên mặt nước Hồ Gươm tăng cao vào ban ngày, giảm vào ban đêm.", "D. Muỗi xuất hiện nhiều vào mùa mưa, giảm vào mùa khô."], ans: 0, expl: "Biến cố bất thường như thiên tai, nhiệt độ tăng đột ngột gây ra biến động không theo chu kì." },
+        { q: "Tập hợp nào sau đây không phải là quần xã sinh vật?", opts: ["A. Một khu rừng.", "B. Một hồ tự nhiên.", "C. Một đàn chuột đồng.", "D. Một ao cá."], ans: 2, expl: "Đàn chuột đồng chỉ là một quần thể (cùng loài). Quần xã phải gồm nhiều quần thể của các loài khác nhau." },
+        { q: "Trong quần xã sinh vật, loài có số lượng cá thể nhiều và hoạt động mạnh được gọi là.", opts: ["A. Loài đặc trưng.", "B. Loài đặc hữu.", "C. Loài ưu thế.", "D. Loài ngẫu nhiên."], ans: 2, expl: "Loài ưu thế là loài đóng vai trò quan trọng trong quần xã do số lượng lớn, sinh khối cao hoặc hoạt động mạnh." },
+        { q: "Các sinh vật trong quần xã phân bố", opts: ["A. Theo chiều thẳng đứng và chiều ngang.", "B. Đồng đều và theo nhóm.", "C. Ngẫu nhiên và đồng đều.", "D. Theo chiều thẳng đứng và theo nhóm."], ans: 0, expl: "Trong quần xã, sự phân bố không gian được chia thành 2 kiểu chính: theo chiều thẳng đứng (phân tầng) và theo chiều ngang." },
+        { q: "Khi nói về độ đa dạng của quần xã sinh vật, kết luận nào sau đây không đúng?", opts: ["A. Độ đa dạng của quần xã phụ thuộc vào điều kiện sống của môi trường.", "B. Trong quá trình diễn thế nguyên sinh, độ đa dạng của quần xã tăng dần.", "C. Quần xã có độ đa dạng càng cao thì thành phần loài càng dễ bị biến động.", "D. Độ đa dạng của quần xã càng cao thì sự phân hóa ổ sinh thái càng mạnh."], ans: 2, expl: "Độ đa dạng càng cao thì lưới thức ăn càng phức tạp, quần xã càng ỔN ĐỊNH và khó bị biến động." },
+        { q: "Đặc trưng nào sau đây là của quần xã sinh vật?", opts: ["A. Kiểu tăng trưởng.", "B. Nhóm tuổi.", "C. Thành phần loài.", "D. Mật độ cá thể."], ans: 2, expl: "Thành phần loài (số lượng loài, loài ưu thế, loài đặc trưng) là đặc trưng cơ bản của quần xã. Các đáp án khác thuộc về quần thể." },
+        { q: "Sự phân tầng theo phương thẳng đứng trong quần xã sinh vật có ý nghĩa gì?", opts: ["A. Tăng hiệu quả sử dụng nguồn sống, tăng sự canh tranh giữa các quần thể.", "B. Giảm mức độ canh tranh giữa các loài, giảm khả năng tận dụng nguồn sống.", "C. Giảm khả năng tận dụng nguồn sống, tăng sự canh tranh giữa các quần thể.", "D. Giảm mức độ canh tranh giữa các loài, nâng cao hiệu quả sử dụng nguồn sống."], ans: 3, expl: "Phân tầng tạo ra các ổ sinh thái khác nhau, giúp giảm sự cạnh tranh và tận dụng tối đa nguồn sáng, dinh dưỡng." },
+        { q: "Trong 1 ao nuôi cá, người ta thường nuôi ghép các loài cá sống ở các tầng nước khác nhau. Kĩ thuật nuôi ghép này đem lai bao nhiêu lợi ích sau đây?<br>(1) Tận dụng diện tích ao nuôi.<br>(2) Có thể tiết kiệm chi phí sản xuất.<br>(3) Tận dụng nguồn sống của môi trường.<br>(4) Rút ngắn thời gian sinh trưởng của tất cả các loại cá trong ao.", opts: ["A. 4", "B. 3", "C. 2", "D. 1"], ans: 1, expl: "Các ý đúng là (1), (2), (3). Việc nuôi ghép không làm thay đổi bản chất thời gian sinh trưởng (4) của từng loài cá." },
+        { q: "Trong một ao cá, mối quan hệ có thể xảy ra khi hai loài cá có cùng nhu cầu thức ăn là", opts: ["A. Vật ăn thịt con mồi.", "B. Ức chế - cảm nhiễm.", "C. Cạnh tranh.", "D. Kí sinh."], ans: 2, expl: "Khi có chung nguồn sống (thức ăn, không gian), các loài sẽ cạnh tranh với nhau." },
+        { q: "Trong quần xã sinh vật, những mối quan hệ nào sau đây một loài được lợi và loài kia bị hại?", opts: ["A. Sinh vật này ăn sinh vật khác, ức chế cảm nhiễm.", "B. Kí sinh vật chủ, sinh vật này ăn sinh vật khác.", "C. Kí sinh vật chủ, ức chế cảm nhiễm.", "D. Ức chế cảm nhiễm, cạnh tranh."], ans: 1, expl: "Quan hệ đối kháng có 1 loài lợi 1 loài hại rõ rệt nhất là Sinh vật ăn sinh vật khác và Kí sinh - vật chủ." },
+        { q: "Quan hệ giữa hai loài sống chung với nhau, cả hai cùng có lợi và không nhất thiết phải xảy ra là:", opts: ["A. quan hệ hợp tác.", "B. quan hệ cộng sinh.", "C. quan hệ hội sinh.", "D. quan hệ kí sinh."], ans: 0, expl: "Hợp tác là quan hệ đôi bên cùng có lợi nhưng không bắt buộc (không có nhau vẫn sống được). Cộng sinh là bắt buộc." },
+        { q: "Loài nấm penixilin trong quá trình sống tiết ra kháng sinh penixilin giết chết nhiều loài vi sinh vật và vi khuẩn xung quanh loài nấm đó sinh sống. Ví dụ này minh họa mối quan hệ", opts: ["A. cạnh tranh.", "B. ức chế - cảm nhiễm.", "C. hội sinh.", "D. hợp tác."], ans: 1, expl: "Nấm vô tình tiết ra chất độc hại cho vi khuẩn (không cố ý trục lợi trực tiếp), thuộc quan hệ ức chế - cảm nhiễm." },
+        { q: "Trùng roi (Trichomonas) sống trong ruột mối tiết enzim phân giải xenlulose trong thức ăn của mối thành đường để nuôi sống cả hai. Đây là ví dụ về mối quan hệ", opts: ["A. Hợp tác.", "B. Hội sinh.", "C. Cộng sinh.", "D. Kí sinh."], ans: 2, expl: "Sự liên kết chặt chẽ, bắt buộc phải có nhau để sinh tồn giữa trùng roi và mối là cộng sinh." },
+        { q: "Trong quần xã sinh vật, các loài như hổ và báo là", opts: ["A. loài chủ chốt.", "B. loài ưu thế.", "C. loài đặc trưng.", "D. loài ngẫu nhiên."], ans: 0, expl: "Hổ, báo là động vật ăn thịt đầu bảng, đóng vai trò kiểm soát số lượng các loài khác, duy trì sự ổn định của quần xã (loài chủ chốt)." },
+        { q: "Những hành động nào sau đây của con người bảo vệ các quần xã sinh vật?<br>(1) Tăng cường nhập nội các giống cây trồng và vật nuôi quý hiếm.<br>(2) Xây dựng các khu bảo tồn thiên nhiên, vườn quốc gia.<br>(3) Bảo vệ và phục hồi các loài động vật, thực vật quý hiếm.<br>(4) Sử dụng biện pháp kiểm soát sinh học để thay thế biện pháp hoá học.", opts: ["A. (1), (2), (3).", "B. (1), (3), (4).", "C. (2), (3), (4).", "D. (1), (2), (4)"], ans: 2, expl: "Việc nhập nội bừa bãi (1) có thể gây ra thảm họa sinh thái do sinh vật ngoại lai xâm hại." },
+        { q: "Những loài sinh vật nào sau đây được coi là loài ngoại lai khi được nuôi trồng ở Việt Nam?<br>(1) Bèo tây.<br>(2) Ốc bươu vàng.<br>(3) Cá chép.<br>(4) Rùa tai đỏ.", opts: ["A. (1), (2), (3).", "B. (1), (2), (4).", "C. (2), (3), (4).", "D. (1), (3), (4)."], ans: 1, expl: "Bèo tây, Ốc bươu vàng và Rùa tai đỏ đều là các loài ngoại lai xâm hại." },
+        { q: "Trong quần xã sinh vật có các loài sinh vật sau: cỏ, thỏ, dê, mèo rừng, vi khuẩn gây bệnh trên mèo rừng. Có những mối quan hệ sinh thái nào giữa các loài trên?<br>(1) Quan hệ cạnh tranh.<br>(2) Quan hệ sinh vật này ăn sinh vật khác.<br>(3) Quan hệ kí sinh.<br>(4) Quan hệ ức chế – cảm nhiễm.", opts: ["A. (1), (2).", "B. (1), (2), (3).", "C. (2), (3).", "D. (1), (2), (3), (4)."], ans: 1, expl: "Dê và thỏ cạnh tranh cỏ (1); Mèo ăn thỏ (2); Vi khuẩn kí sinh mèo (3)." },
+        { q: "Hệ sinh thái bao gồm:", opts: ["A. quần xã sinh vật và môi trường vô sinh của quần xã", "B. quần thể sinh vật và môi trường vô sinh của quần xã", "C. quần xã sinh vật và môi trường hữu sinh của quần xã", "D. quần thể sinh vật và môi trường hữu sinh của quần xã"], ans: 0, expl: "Hệ sinh thái = Quần xã sinh vật + Sinh cảnh (môi trường vô sinh)." },
+        { q: "Thành phần hữu sinh của một hệ sinh thái bao gồm:", opts: ["A. sinh vật sản xuất, sinh vật tiêu thụ, sinh vật phân giải.", "B. sinh vật sản xuất, sinh vật ăn thực vật, sinh vật phân giải.", "C. sinh vật ăn thực vật, sinh vật ăn động vật, sinh vật phân giải.", "D. sinh vật sản xuất, sinh vật ăn động vật, sinh vật phân giải."], ans: 0, expl: "Cấu trúc hữu sinh của hệ sinh thái chia thành 3 nhóm chức năng: Sản xuất, Tiêu thụ và Phân giải." },
+        { q: "Các kiểu hệ sinh thái trên Trái Đất được phân chia theo nguồn gốc bao gồm:", opts: ["A. hệ sinh thái trên cạn và hệ sinh thái dưới nước.", "B. hệ sinh thái tự nhiên và hệ sinh thái nhân tạo.", "C. hệ sinh thái nước mặn và hệ sinh thái nước ngọt.", "D. hệ sinh thái nước mặn và hệ sinh thái trên cạn."], ans: 1, expl: "Dựa vào nguồn gốc hình thành, người ta chia làm HST tự nhiên và HST nhân tạo (do con người tạo ra)." },
+        { q: "Chuỗi thức ăn là ?", opts: ["A. Là một dãy gồm nhiều loài sinh vật có quan hệ dinh dưỡng với nhau.", "B. Là một dãy gồm nhiều loài sinh vật có cùng nơi ở với nhau.", "C. Là một dãy gồm nhiều loài sinh vật có cùng nguồn thức ăn với nhau.", "D. Là một dãy gồm nhiều loài sinh vật không cùng nguồn thức ăn với nhau."], ans: 0, expl: "Trong chuỗi thức ăn, loài trước là thức ăn của loài sau tạo thành một chuỗi quan hệ dinh dưỡng." },
+        { q: "Trong chuỗi thức ăn sau cỏ → dê → hổ → vi sinh vật, hổ được xếp vào sinh vật tiêu thụ bậc mấy?", opts: ["A. Bậc 1.", "B. Bậc 3.", "C. Bậc 2.", "D. Bậc 4."], ans: 2, expl: "Cỏ (SV sản xuất) -> Dê (SV tiêu thụ bậc 1) -> Hổ (SV tiêu thụ bậc 2)." },
+        { q: "Cho chuỗi thức ăn sau đây: Lúa → Chuột đồng → Rắn hổ mang → Diều hâu. Hãy chọn khẳng định đúng trong các khẳng định dưới đây:", opts: ["A. Chuột đồng thuộc bậc dinh dưỡng số 1.", "B. Năng lượng tích lũy trong quần thể diều hâu là cao nhất.", "C. Việc tiêu diệt bớt diều hâu sẽ làm giảm số lượng chuột đồng.", "D. Rắn hổ mang là sinh vật tiêu thụ cấp 3."], ans: 2, expl: "Tiêu diệt diều hâu -> rắn tăng -> rắn ăn nhiều chuột -> chuột giảm." },
+        { q: "Bậc dinh dưỡng là:", opts: ["A. Là những thành phần cấu tạo nên nguồn thức ăn.", "B. Là những thành phần cấu tạo nên chuỗi thức ăn.", "C. Là những thành phần cấu tạo nên lưới thức ăn.", "D. Là những thành phần cấu tạo nên chuỗi và lưới thức ăn."], ans: 3, expl: "Mỗi mắt xích trong chuỗi và lưới thức ăn đều tương ứng với một bậc dinh dưỡng." },
+        { q: "Cho một lưới thức ăn có sâu ăn hạt ngô, châu chấu ăn lá ngô, chim chích và ếch xanh đều ăn châu chấu và sâu, rắn hổ mang ăn ếch xanh. Cho các phát biểu sau về lưới thức ăn ở trên, phát biểu nào là đúng:", opts: ["A. Sinh vật tiêu thụ bậc 2 là sâu ăn lá ngô và châu chấu.", "B. Lưới thức ăn trên có 4 chuỗi thức ăn.", "C. Rắn hổ mang thuộc bậc dinh dưỡng cấp 3.", "D. Chim chích là sinh vật duy nhất thuộc sinh bậc dinh dưỡng cấp 2."], ans: 1, expl: "Gồm 4 chuỗi: Ngô->Sâu->Chim; Ngô->Sâu->Ếch->Rắn; Ngô->Châu chấu->Chim; Ngô->Châu chấu->Ếch->Rắn." },
+        { q: "Nguồn năng lượng cung cấp cho các hệ sinh thái trên Trái đất là:", opts: ["A. năng lượng gió.", "B. năng lượng điện.", "C. năng lượng nhiệt.", "D. năng lượng mặt trời."], ans: 3, expl: "Mặt trời là nguồn năng lượng khởi đầu cho hầu hết các hệ sinh thái trên Trái Đất." },
+        { q: "Hiệu suất sinh thái là:", opts: ["A. Tỉ lệ % chuyển hóa năng lượng giữa các bậc dinh dưỡng trong hệ sinh thái.", "B. Tỷ lệ % năng lượng tích lũy được giữa các bậc dinh dưỡng trong hệ sinh thái.", "C. Tỉ lệ % năng lượng tiêu hao trong hệ sinh thái.", "D. Tỉ lệ % năng lượng mất qua hô hấp giữa các bậc dinh dưỡng trong hệ sinh thái."], ans: 0, expl: "Hiệu suất sinh thái đo lường khả năng chuyển hóa năng lượng từ bậc dinh dưỡng thấp lên bậc cao hơn." },
+        { q: "Quan sát một tháp sinh khối, chúng ta có thể biết được thông tin nào sau đây:", opts: ["A. Các loài trong chuỗi và lưới thức ăn.", "B. Năng suất của sinh vật ở mỗi bậc dinh dưỡng.", "C. Mức độ dinh dưỡng ở từng bậc và toàn bộ quần xã.", "D. Quan hệ giữa các loài trong quần xã."], ans: 2, expl: "Tháp sinh thái phản ánh mức độ dinh dưỡng (sinh khối/năng lượng/số lượng) của các bậc dinh dưỡng." },
+        { q: "Kết quả của diễn thế thứ sinh:", opts: ["A. Hình thành quần xã ổn định.", "B. Luôn dẫn đến một quần xã đỉnh cực.", "C. Thường dẫn đến sự hình thành một quần xã bị suy thoái.", "D. Phục hồi thành quần xã nguyên sinh."], ans: 2, expl: "Theo đáp án trong ảnh đề cương, diễn thế thứ sinh thường dẫn đến sự hình thành một quần xã bị suy thoái." },
+        { q: "Một trong những xu hướng biến đổi trong quá trình diễn thế nguyên sinh trên cạn là:", opts: ["A. Sinh khối ngày càng giảm.", "B. Độ đa dạng của quần xã ngày càng cao, lưới thức ăn ngày càng phức tạp.", "C. Độ đa dạng của quần xã ngày càng giảm, lưới thức ăn ngày càng đơn giản.", "D. Tính ổn định của quần xã ngày càng giảm."], ans: 1, expl: "Diễn thế nguyên sinh là quá trình phát triển đi lên, làm tăng sinh khối, độ đa dạng và tính ổn định." },
+        { q: "Hãy nghiên cứu hình ảnh dưới đây và cho biết đây là loại tháp sinh thái nào?", img: "cau51_mcq.png", opts: ["A. Tháp tuổi.", "B. Tháp sinh khối.", "C. Tháp số lượng.", "D. Tháp năng lượng."], ans: 2, expl: "Tháp xây dựng dựa trên số đếm cá thể (1 con, 10 con, 100 con, 5000 cây) là tháp số lượng." },
+        { q: "Hình bên minh hoạ dạng tháp sinh thái nào?", img: "cau52_mcq.png", opts: ["A. Tháp sinh khối.", "B. Tháp số lượng.", "C. Tháp dân số.", "D. Tháp năng lượng."], ans: 3, expl: "Đơn vị năng lượng (Joules, kcal) luôn biểu diễn cho Tháp năng lượng." },
+        { q: "Đồ thị nào sau đây mô tả đúng kết quả của quá trình biến đổi quần xã tuần tự trong diễn thế sinh thái nguyên sinh?", img: "cau53_mcq.png", opts: ["A. Đồ thị D.", "B. Đồ thị B.", "C. Đồ thị A.", "D. Đồ thị C."], ans: 2, expl: "Theo đáp án, Đồ thị A biểu diễn quá trình số lượng loài tăng dần và tiến tới trạng thái ổn định." },
+        { q: "Cho các thông tin ở bảng bên:<br>Bậc dinh dưỡng | Năng suất sinh học<br>Cấp 1 | 2,2 × 10^6 calories<br>Cấp 2 | 1,1 × 10^6 calories<br>Cấp 3 | 1,25 × 10^6 calories<br>Cấp 4 | 0,5 × 10^6 calories<br>Hiệu suất sinh thái giữa bậc dinh dưỡng cấp 2 so với bậc dinh dưỡng cấp 1 và giữa bậc dinh dưỡng cấp 4 so với bậc dinh dưỡng cấp 3 lần lượt là:", opts: ["A. 0,5% và 4%.", "B. 2% và 2,5%.", "C. 0,5% và 0,4%.", "D. 0,5% và 5%."], ans: 3, expl: "Ghi chú đáp án: Không có phương án đúng theo số liệu trong bảng (cấp 2/cấp 1 = 50%, cấp 4/cấp 3 = 40%). Do đó chọn D hoặc đáp án ảo theo đề bài cung cấp." },
+        { q: "Cho các ví dụ về mối quan hệ giữa các loài trong quần xã sinh vật:<br>I. Tảo giáp nở hoa gây độc cho cá sống trong cùng môi trường.<br>II. Cây tầm gửi sống bám trên thân các cây gỗ trong rừng.<br>III Cây phong lan bám trên thân cây gỗ sống trong rừng.<br>IV. Vi khuẩn Rhizobium sống trong nốt sần ở rễ cây họ Đậu.<br>Có bao nhiêu ví dụ thuộc về mối quan hệ hỗ trợ giữa các loài trong quần xã sinh vật?", opts: ["A. 1.", "B. 2", "C. 3.", "D. 4."], ans: 1, expl: "Có 2 ví dụ hỗ trợ là III (hội sinh) và IV (cộng sinh). I và II là quan hệ đối kháng." },
+        { q: "Khi nói về tháp sinh thái, có bao nhiêu kết luận đúng?<br>(1) Hạn chế của tháp số lượng là do phụ thuộc vào số lượng cá thể nên đôi khi bị biến dạng.<br>(2) Tháp sinh khối có giá trị hơn tháp số lượng.<br>(3) Hạn chế của tháp sinh khối là không đề cập đến thời gian tích lũy khối lượng chất sống ở mỗi bậc dinh dưỡng.<br>(4) Ở những vùng nước trống trải và sâu, tháp sinh thái thường có đáy nhỏ.", opts: ["A. 1.", "B. 2.", "C. 3.", "D. 4."], ans: 3, expl: "Theo đáp án trong ảnh, cả 4 kết luận đều đúng." },
+        { q: "Khi nói về các đặt trưng cơ bản của quần thể sinh vật, có bao nhiêu nhận định dưới đây đúng?<br>(1) Mật độ cỏ có thể tăng mãi theo thời gian vì vốn dĩ loài này đã có sức sống cao, có thể tồn tại ở bất cứ điều kiện khắc nghiệt nào.<br>(2) Trong sinh cảnh cùng tồn tại nhiều loài có họ hàng gần nhau thường dẫn đến phân li ổ sinh thái.<br>(3) Rét đậm kéo dài ở miền bắc vào mùa đông năm 2008, đã làm chết rất nhiều gia súc là biến động theo chu kì mùa.<br>(4) Có 2 dạng biến động là biến động theo chu kì và biến động không theo chu kì.", opts: ["A. 1.", "B. 2", "C. 3.", "D. 4."], ans: 1, expl: "Theo đáp án trong ảnh, có 2 nhận định đúng (nhận định 2 và 4)." },
+        { q: "Khi nói về biến động số lượng cá thể của quần thể sinh vật, có bao nhiêu nhận định dưới đây đúng?<br>(1) Biến động số lượng được coi là phản ứng tổng hợp của quần thể trước sự biến đổi của điều kiện sống, đặc biệt là nguồn thức ăn và không gian sống cũng như các nhân tố môi trường khác.<br>(2) Biến động không theo chu kì thường xảy ra với các loài sinh vật có kích thước nhỏ và tuổi thọ thấp.<br>(3) Các loài sinh vật có kích thước nhỏ và tuổi thọ thấp thường biến động theo chu kì ngày đêm.<br>(4) Cạnh tranh là nhân tố duy nhất điều chỉnh số lượng cá thể của quần thể.", opts: ["A. 1.", "B. 2", "C. 3.", "D. 4."], ans: 0, expl: "Theo ảnh đáp án, chỉ có 1 nhận định đúng là nhận định (1)." },
+        { q: "Cho các nhận xét sau:<br>I. Tuyến vú ở nam là một cơ quan thoái hóa.<br>II. Một cơ quan thoái hóa bỗng dưng hoạt động trở lại được gọi là hiện tượng lại tổ.<br>III. Cơ quan tương tự phản ánh sự tiến hóa đồng quy.<br>IV. Theo định luật phát sinh sinh vật: \"Sự phát triển của một cá thể phản ánh một cách rút gọn sự phát triển của một quần thể\".<br>V. Cơ quan tương tự khác nhau về nguồn gốc trong quá trình phát triển phôi.<br>VI. Bằng chứng tế bào học là bằng chứng trực tiếp chứng minh mọi sinh vật đều có chung nguồn gốc.<br>VII. Cơ quan thoái hóa phát triển đầy đủ trên cơ thể người trưởng thành.<br>VIII. Cơ quan tương tự chứng minh nguồn gốc chung của các loài.<br>Có bao nhiêu nhận xét đúng?", opts: ["A. 1", "B. 2", "C. 3", "D. 4"], ans: 3, expl: "Theo đáp án trong ảnh, có 4 nhận xét đúng." },
+        { q: "Cho ví dụ về các loại cơ quan ở các loài sau:<br>I. Cánh của chim và cánh của các loài côn trùng<br>II. Chi trước của người, cá voi, mèo, dơi… đều có xương cánh, xương cẳng, xương cổ, xương bàn, xương ngón,<br>III. Xương cùng, ruột thừa và răng khôn của người<br>IV. Gai xương rồng và tua cuốn của đậu Hà Lan<br>Các cơ quan tương đồng thuộc những trường hợp nào?", opts: ["A. I, IV.", "B. III, IV.", "C. II, IV.", "D. II, III."], ans: 2, expl: "II (Chi trước của thú) và IV (Gai xương rồng, tua cuốn đậu) thể hiện tính tương đồng." }
+    ];
+
+    const rawTF = [
+        { q: "Khi nói về giới hạn sinh thái, phát biểu sau đây là đúng hay sai?", s: [{ txt: "a) Trong khoảng chống chịu, hoạt động sinh lí của sinh vật bị ức chế.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Giới hạn sinh thái về nhiệt độ của các loài đều giống nhau.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "c) Trong khoảng thuận lợi, nhân tố sinh thái gây ức chế cho hoạt động sinh lí của sinh vật.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d) Ngoài giới hạn sinh thái, sinh vật sẽ không thể tồn tại được.", ans: true, expl: "Đúng (Màu vàng)." }] },
+        { q: "Khi nói về sự tác động qua lại giữa môi trường và sinh vật, các nhận định dưới đây là đúng hay sai?", s: [{ txt: "a) Các loài sinh vật phản ứng khác nhau trước nhiệt độ môi trường.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Chỉ có động vật mới nhạy cảm với nhiệt độ, còn thực vật thì ít phản ứng với nhiệt độ.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "c) Động vật biến nhiệt thay đổi nhiệt độ cơ thể theo nhiệt độ môi trường nên dễ thích nghi hơn so với động vật đẳng nhiệt.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d) Động vật đẳng nhiệt có khả năng phân bố rộng hơn động vật biến nhiệt.", ans: true, expl: "Đúng (Màu vàng)." }] },
+        { q: "Khi nói về kiểu phân bố đều của các cá thể trong quần thể, các phát biểu dưới đây là đúng hay sai?", s: [{ txt: "a) Các cá thể không tập hợp thành từng nhóm.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Xuất hiện phổ biến trong tự nhiên.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "c) Xảy ra khi điều kiện sống phân bố đồng đều trong môi trường.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "d) Xảy ra ở các quần thể chim cánh cụt, dã tràng, hươu, nai.", ans: true, expl: "Đúng (Màu vàng)." }] },
+        { q: "Khi nói về các đặc trưng cơ bản của quần thể, các nhận định dưới đây là đúng hay sai?", s: [{ txt: "a) Tỉ lệ giới tính của quần thể là đặc trưng quan trọng đảm bảo hiệu quả sinh sản của quần thể trong điều kiện môi trường thay đổi.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Tuổi sinh lí là thời gian sống thực tế của cá thể.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "c) Tuổi sinh thái là thời gian sống có thể đạt tới của một cá thể trong quần thể.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d) Mật độ cá thể của quần thể không cố định mà thay đổi theo mùa, năm hoặc tùy điều kiện môi trường sống.", ans: true, expl: "Đúng (Màu vàng)." }] },
+        { q: "Đồ thị M và đồ thị N ở hình bên mô tả sự biến động số lượng cá thể của thỏ và số lượng cá thể của mèo rừng sống ở rừng phía Bắc Canada và Alaska (hình bên) Dựa vào thông tin trên, hãy cho biết các nhận định dưới đây là đúng hay sai?", img: "cau5_tf.png", s: [{ txt: "a) Đồ thị M thể hiện sự biến động số lượng cá thể của thỏ và đồ thị N thể hiện sự biến động số lượng cá thể của mèo rừng.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Năm 1865, kích thước quần thể thỏ và kích thước quần thể mèo rừng đều đạt cực đại.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "c) Biến động số lượng cá thể của 2 quần thể này đều là biến động theo chu kì.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "d) Sự tăng trưởng của quần thể thỏ và sự tăng trưởng của quần thể mèo rừng có ảnh hưởng lẫn nhau.", ans: true, expl: "Đúng (Màu vàng)." }] },
+        { q: "Khi nói đến tăng trưởng của quần thể sinh vật, các nhận định dưới đây là đúng hay sai?", s: [{ txt: "a) Quần thể tăng trưởng theo tiềm năng sinh học trong điều kiện môi trường hoàn toàn thuận lợi và tiềm năng sinh học của các cá thể cao.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Mức độ sinh sản của quần thể sinh vật chỉ phụ thuộc vào thức ăn có trong môi trường.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "c) Mức độ tử vong là số lượng cá thể của quần thể bị chết trong một đơn vị thời gian.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d) Đường cong tăng trưởng kinh tế có hình chữ J.", ans: false, expl: "Sai (Màu đỏ)." }] },
+        { q: "Mối quan hệ giữa loài A và B được biểu diễn bằng sự biến động số lượng của chúng theo hình bên. Dựa vào các thông tin trên hãy cho biết các nhận định dưới đây là đúng hay sai?", img: "cau7_tf.png", s: [{ txt: "a) Mối quan hệ giữa hai loài này là quan hệ cạnh tranh.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "b) Kích thước cơ thể của loài A thường lớn hơn loài B.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "c) Sự biến động số lượng của loài A dẫn đến sự biến động số lượng của loài B và ngược lại.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "d) Loài B có thường xu hướng tiêu diệt loài A.", ans: false, expl: "Sai (Màu đỏ)." }] },
+        { q: "Khi nói về mối quan hệ dinh dưỡng trong quần xã, các phát biểu dưới đây là đúng hay sai?", s: [{ txt: "a) Trong lưới thức ăn, một loài sinh vật có thể tham gia vào nhiều chuỗi thức ăn.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Trong chuỗi thức ăn được mở đầu bằng thực vật thì sinh vật sản xuất có khối sinh lớn nhất.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "c) Quần xã sinh vật có độ đa dạng càng cao thì lưới thức ăn trong quần xã càng phức tạp.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "d) Các quần xã trưởng thành có lưới thức ăn đơn giản hơn so với quần xã trẻ hoặc suy thoái.", ans: false, expl: "Sai (Màu đỏ)." }] },
+        { q: "Giả sử một chuỗi thức ăn ở một hệ sinh thái vùng biển khơi được mô tả như sau: Thực vật phù du -> Động vật phù du -> Cá trích -> Cá ngừ. Mỗi thực vật dưới đây về chuỗi thức ăn trên là đúng hay sai?", img: "cau9_tf.png", s: [{ txt: "a) Chuỗi thức ăn này có 4 bậc dinh dưỡng.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Chỉ có động vật phù du và cá trích là sinh vật tiêu thụ.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "c) Mối quan hệ giữa cá ngừ và cá trích là quan hệ giữa sinh vật ăn thịt và con mồi.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "d) Sự tăng, giảm kích thước của quần thể cá trích có ảnh hưởng đến kích thước của quần thể cá ngừ.", ans: true, expl: "Đúng (Màu vàng)." }] },
+        { q: "Hình vẽ dưới đây mô tả một tháp sinh thái về năng lượng của 4 loài sinh vật trong một chuỗi thức ăn của một hệ sinh thái, các chữ cái A, B, C, D lần lượt là bậc dinh dưỡng của các loài. Khi nói về tháp sinh thái này, mỗi phát biểu dưới đây đúng hay sai?", img: "cau10_tf.png", s: [{ txt: "a) Các cá thể ở bậc dinh dưỡng A nhận năng lượng trực tiếp từ Mặt Trời.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "b) Các cá thể ở bậc dinh dưỡng C là loài động vật ăn thịt.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "c) Các cá thể ở bậc dinh dưỡng B nhận năng lượng trực tiếp từ bậc dinh dưỡng B.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d) Sinh vật ở bậc dinh dưỡng D là sinh vật tự dưỡng.", ans: true, expl: "Đúng (Màu vàng)." }] },
+        { q: "Sơ đồ sau mô tả các giai đoạn của một quá trình diễn thế sinh thái: Khi nói về quá trình này, những phát biểu sau đây là đúng hay sai?", img: "cau11_tf.png", s: [{ txt: "a) Quá trình này là diễn thế nguyên sinh.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Thứ tự đúng của các giai đoạn là a → e → c → d → b.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "c) Quần xã ở giai đoạn d có độ đa dạng cao nhất.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d) Thành phần chủ yếu của giai đoạn e là cây thân thảo ưa bóng.", ans: false, expl: "Sai (Màu đỏ)." }] },
+        { q: "Các nhận xét về lưới thức ăn dưới đây là đúng hay sai?", img: "cau12_tf.png", s: [{ txt: "a) Có 3 sinh vật thuộc bậc dinh dưỡng cấp 3.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "b) Có 3 chuỗi thức ăn.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "c) Sâu ăn lá, chuột, gà là các sinh vật tiêu thụ bậc 1.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "d) Lúa và sâu ăn lá là sinh vật sản xuất ở trong lưới thức ăn trên.", ans: false, expl: "Sai (Màu đỏ)." }] },
+        { q: "Khi nói về hệ sinh thái và các yếu tố liên quan đến hệ sinh thái, những phát biểu sau đây là đúng hay sai?", s: [{ txt: "a) Trong quần thể sinh vật, một loài có thể tham gia đồng thời vào các chuỗi thức ăn khác nhau.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Quần xã sinh vật càng đa dạng về thành phần loài thì lưới thức ăn càng đơn giản.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "c) Chuỗi thức ăn có thể bắt đầu bằng sinh vật phân giải mùn bã hữu cơ.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "d) Mỗi lưới thức ăn gồm nhiều loài có quan hệ dinh dưỡng với nhau và mỗi loài là một mắt xích của lưới thức ăn.", ans: true, expl: "Đúng (Màu vàng)." }] },
+        { q: "Giả sử lưới thức ăn của một quần xã sinh vật gồm các loài A, B, C, D, E, G, H. Trong đó A là sinh vật sản xuất, các loài còn lại là sinh vật tiêu thụ. Các loài sinh vật trong quần xã có mối quan hệ dinh dưỡng thể hiện trong sơ đồ sau. Khi nói về lưới thức ăn trên, những phát biểu sau đây là đúng hay sai?", img: "cau14_tf.png", s: [{ txt: "a) Chuỗi thức ăn dài nhất có 6 bậc dinh dưỡng.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "b) Trong lưới thức ăn có 8 chuỗi thức ăn.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "c) Khi kích thước quần thể loài E bị giảm thì số lượng cá thể của loài B và D tăng.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d) Khi loài A bị nhiễm độc thì loài H có khả năng bị nhiễm độc nặng nhất.", ans: true, expl: "Đúng (Màu vàng)." }] },
+        { q: "Cho sơ đồ lưới thức ăn sau: Dựa vào thông tin của lưới thức ăn trên, những phát biểu sau đây là đúng hay sai?", img: "cau15_tf.png", s: [{ txt: "a) Lưới thức ăn trên có nhiều hơn 6 chuỗi thức ăn.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Có 3 loài thuộc bậc dinh dưỡng cấp 1.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "c) Có 3 loài thuộc bậc dinh dưỡng cấp 2.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d) Chuỗi thức ăn dài nhất có 3 bậc dinh dưỡng.", ans: false, expl: "Sai (Màu đỏ)." }] },
+        { q: "Cho lưới thức ăn sau: Dựa vào thông tin của lưới thức ăn trên, những phát biểu sau đây là đúng hay sai?", img: "cau16_tf.png", s: [{ txt: "a) Sinh vật đầu bảng là cá diếc.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "b) Cá lóc ở 4 bậc dinh dưỡng khác nhau.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "c) Chuỗi thức ăn chiếm ưu thế trong tự nhiên được biểu diễn ở lưới thức ăn trên là chuỗi mà cá lóc là sinh vật tiêu thụ bậc 3.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d) Có trường hợp nếu một loài nào đó trong lưới thức ăn trên bị mất đi thì sẽ không còn chuỗi thức ăn nào.", ans: false, expl: "Sai (Màu đỏ)." }] },
+        { q: "Giả sử lưới thức ăn trong 1 hệ sinh thái được mô tả ở hình bên. Nếu trâu rừng bị loại bỏ hoàn toàn khỏi hệ sinh thái này thì theo lí thuyết, những phát biểu sau đây là đúng hay sai?", img: "cau17_tf.png", s: [{ txt: "a) Rận trâu sẽ bị loại bỏ khỏi hệ sinh thái này nếu chúng không lấy thức ăn từ mắt xích khác.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Số lượng cá thể sâu ăn lá có thể tăng lên vì có nguồn dinh dưỡng dồi dào hơn.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "c) Số lượng cá thể nai không bị ảnh hưởng vì không liên quan đến cỏ 1.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d) Mức độ cạnh tranh giữa hổ và báo có thể tăng lên.", ans: true, expl: "Đúng (Màu vàng)." }] },
+        { q: "Cho các phát biểu về lưới thức ăn bên dưới, những phát biểu sau đây là đúng hay sai?", img: "cau18_tf.png", s: [{ txt: "a) Lưới thức ăn này có tối đa 4 bậc dinh dưỡng.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Quan hệ giữa rắn và cú mèo là quan hệ cạnh tranh.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "c) Rắn là loài duy nhất khống chế số lượng chuột.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d) Chim gõ kiến là sinh vật tiêu thụ bậc 3.", ans: false, expl: "Sai (Màu đỏ)." }] },
+        { q: "Trong một khu rừng nhiệt đới, thực vật là nguồn thức ăn cho nhiều loài khác: Gỗ làm thức ăn cho xén tóc; chuột ăn rễ cây; quả của cây làm mồi cho khi, sóc, sâu ăn quả; còn lá cây là nguồn thức ăn của hươu, sâu ăn lá và khỉ. Hổ ăn thịt hươu và khỉ; sâu ăn lá và sâu ăn quả là thức ăn của chim ăn sâu; gõ kiến và rắn có nguồn thức ăn lần lượt là xén tóc và chuột. Cú méo ăn sóc và chuột trong khi đó chim ăn sâu, khỉ, sóc, chuột, gõ kiến, rắn là thức ăn của đại bàng. Dựa vào các thông tin đã cho hãy cho biết các phát biểu dưới đây là đúng hay sai?", img: "cau19_tf.png", s: [{ txt: "a) Chuỗi thức ăn dài nhất có 4 mắt xích.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "b) Đại bàng sử dụng đến 6 loài sinh vật làm thức ăn.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "c) Có 3 chuỗi thức ăn mà đại bàng là sinh vật tiêu thụ bậc 3.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "d) Đại bàng thuộc 7 chuỗi thức ăn khác nhau.", ans: false, expl: "Sai (Màu đỏ)." }] },
+        { q: "Khi nói về dòng năng lượng trong hệ sinh thái, những phát biểu sau đây là đúng hay sai?", s: [{ txt: "a) Sinh vật đóng vai trò quan trọng nhất trong việc truyền năng lượng từ môi trường vô sinh vào chu trình dinh dưỡng là các sinh vật sản xuất như thực vật.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Năng lượng được truyền trong hệ sinh thái theo chu trình tuần hoàn và được sử dụng trở lại.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "c) Ở mỗi bậc dinh dưỡng, phần lớn năng lượng bị tiêu hao qua hô hấp, tạo nhiệt, chất thải,... chỉ có khoảng 10% năng lượng truyền lên bậc dinh dưỡng cao hơn.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "d) Trong hệ sinh thái, năng lượng được truyền một chiều từ vi sinh vật qua các bậc dinh dưỡng tới sinh vật sản xuất rồi trở lại môi trường.", ans: false, expl: "Sai (Màu đỏ)." }] },
+        { q: "Cho một quần xã sinh vật gồm những quần thể có mối liên hệ như sau: chuột và thỏ ăn củ của cây, cào cào ăn lá xanh của cây. Trong khi đó, rắn thì lại sử dụng thức ăn là thỏ, chuột, ếch. Về phần mình, ếch lại có nguồn thức ăn là cào cào. Đại bàng tiêu thụ chuột. Xác của động vật tiêu thụ đầu bảng phân hủy thành vi sinh vật. Dưới đây là các kết luận được đưa ra dưới đây từ những thông tin trên, những phát biểu sau đây là đúng hay sai?", s: [{ txt: "a) Trong lưới thức ăn trên có tất cả 4 chuỗi thức ăn.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Muốn lưới thức ăn bền vững ta chỉ cần bảo vệ rắn vì rắn tham gia vào nhiều chuỗi thức ăn nhất.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "c) Loại trừ thực vật ra khỏi lưới thức ăn dẫn đến mất cân bằng sinh thái.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "d) Nếu loại bỏ đại bàng ra khỏi quần thể thì các loài thỏ, ếch, rắn sẽ tăng nhanh suốt.", ans: false, expl: "Sai (Màu đỏ)." }] },
+        { q: "Cho sơ đồ tháp sinh thái năng lượng sau: Các kết luận sau đây về tháp năng lượng trên là kết luận đúng hay sai?", img: "cau22_tf.png", s: [{ txt: "a) Có 87% năng lượng từ thức ăn đã được sử dụng cho các hoạt động sống của sinh vật tiêu thụ bậc 1.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Hiệu suất sinh thái của sinh vật tiêu thụ bậc 2 bằng 12%.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "c) Tỉ lệ tích luỹ năng lượng của sinh vật tiêu thụ bậc 3 bằng 9%.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "d) Nếu chuỗi thức ăn trên đã sử dụng 10% năng lượng mà sinh vật sản xuất đồng hoá được thì sản lượng quang hợp của cỏ là 8,6.10^9kcal.", ans: true, expl: "Đúng (Màu vàng)." }] },
+        { q: "Khi nói về các đặt trưng cơ bản của quần thể sinh vật, những phát biểu sau đây là đúng hay sai?", s: [{ txt: "a) Mật độ cỏ có thể tăng mãi theo thời gian vì vốn dĩ loài này đã có sức sống cao, có thể tồn tại ở bất cứ điều kiện khắc nghiệt nào.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "b) Trong sinh cảnh cùng tồn tại nhiều loài có họ hàng gần nhau thường dẫn đến phân li ổ sinh thái.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "c) Rét đậm kéo dài ở miền bắc vào mùa đông năm 2008, đã làm chết rất nhiều gia súc là biến động theo chu kì mùa.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d) Có 2 dạng biến động là biến động theo chu kì và biến động không theo chu kì.", ans: true, expl: "Đúng (Màu vàng)." }] },
+        { q: "Hình ảnh sau diễn tả kiểu phân bố của cá thể trong quần thể. Dựa vào thông tin trên hình hãy cho biết những phát biểu sau đây là đúng hay sai?", img: "cau24_tf.png", s: [{ txt: "a) Hình 1 là kiểu phân bố đồng đều, hình 2 là kiểu phân bố theo nhóm và hình 3 là kiểu phân bố ngẫu nhiên.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "b) Hình 3 là kiểu phân bố phổ biến nhất, thường gặp khi điều kiện sống phân bố không đồng đều trong môi trường.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "c) Cây thông trong rừng thông hay chim hải âu làm tổ là một số ví dụ của kiểu phân bố được nói đến ở hình 1.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "d) Hình 2 là kiểu phân bố thường gặp khi điều kiện sống được phân bố một cách đồng đều trong một môi trường và khi có sự cạnh tranh gay gắt giữa các cá thể trong quần thể.", ans: false, expl: "Sai (Màu đỏ)." }] },
+        { q: "Khi nói về quan hệ giữa các cá thể trong quần thể và cơ chế điều hòa mật độ của quần thể, những phát biểu sau đây là đúng hay sai?", s: [{ txt: "a) Hiện tượng “tự tỉa thưa” gặp phổ biến ở thực vật, ít gặp ở động vật.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b) Cạnh tranh là đặc điểm thích nghi của quần thể.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "c) Quan hệ cạnh tranh dẫn đến quần thể bị suy thoái, nghèo nàn về vốn gen, mất sự đa dạng di truyền.", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d) Quần thể luôn có xu hướng tự điều chỉnh về trạng thái cân bằng.", ans: true, expl: "Đúng (Màu vàng)." }] },
+        { q: "Loài cá tuyết Nam cực ( họ Channichthyidae) có hoạt động và trao đổi chất rất chậm. Chúng là nhóm động vật có xương sống duy nhất không chứa hồng cầu và sắc tố hemoglobin. Trong hệ gene của cá tuyết, gene β-globin và gene α-globin bị đột biến thành gene giả, không tham gia tổng hợp hemoglobin. Cá tuyết thuộc nhóm động vật biến nhiệt. Máu cá tuyết thiếu hemoglobin giúp có thích nghi tốt trong điều kiện vùng Nam cực nhiệt độ lạnh ( -20C và nồng độ O2 cao. Cá tuyết thu nhận O2 chủ yếu bằng cơ chế khuếch tán trực tiếp vào máu. Cá tuyết có diện tích mang nhỏ nên hoạt động trao đổi khí chủ yếu qua da. Một lượng lớn mạch máu nhỏ dưới da giúp cá nhận đủ O2 để khuếch tán. Dựa vào thông tin trên, mỗi nhận định sau đây là đúng hay sai?", s: [{ txt: "a. Đây là bằng chứng sinh học phân tử chứng tỏ cá tuyết có nguồn gốc từ loài cá có hemogolbin.", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "b. Nhiệt độ nước tăng thì nhiệt độ cơ thể cá tăng", ans: true, expl: "Đúng (Màu vàng)." }, { txt: "c. Khi nhiệt độ thấp, độ nhớt của máu giảm, mất tế bào hồng cầu giúp điều hòa lại dòng chảy của máu", ans: false, expl: "Sai (Màu đỏ)." }, { txt: "d. Nếu bắt cá tuyết con và nuôi ở vùng biển nhiệt đới cá tuyết có thể sống được nhưng nhiều đặc điểm hình thái sẽ bị thay đổi", ans: false, expl: "Sai (Màu đỏ)." }] }
+    ];
+
+    const rawSA = [
+        { q: "Cá rô phi Việt Nam có giới hạn sinh thái về nhiệt độ từ 5,60C đến 420C. Giới hạn trên về nhiệt độ ở cá Rô Phi là bao nhiêu?", ans: "42°C", expl: "Theo đáp án trong ảnh là 42°C." },
+        { q: "Có bao nhiêu ví dụ nào sau đây chứng minh ánh sáng đã ảnh hưởng đến hình thái thực vật?<br>(1) Cây mọc vươn về phía có ánh sáng.<br>(2) Vào mùa đông, thời gian chiếu sáng ít, sâu đòi đình dục.<br>(3) Cùng loài, cây mọc nơi nhiều ánh sáng có vỏ dày hơn, thân cây nhạt, cây thấp và tán rộng hơn.<br>(4) Những cây tầm gửi ưa bóng sống nhờ trên cây khác.", ans: "2", expl: "Theo đáp án trong ảnh là 2." },
+        { q: "Khi nói về độ đa dạng của quần xã, cho các kết luận như sau:<br>(1) Quần xã có độ đa dạng càng cao thì cấu trúc càng đễ bị thay đổi.<br>(2) Độ đa dạng của quần xã phụ thuộc vào điều kiện sống của môi trường.<br>(3) Trong quá trình diễn thế nguyên sinh, độ đa dạng của quần xã tăng đần.<br>(4) Độ đa dạng của quần xã càng cao thì sự phân hóa ổ sinh thái càng mạnh.<br>Có bao nhiêu phát biểu đúng?", ans: "3", expl: "Theo đáp án trong ảnh là 3." },
+        { q: "Trên một thảo nguyên, các con ngựa vằn mỗi khi di chuyển thường đánh động và làm các con côn trùng bay khỏi tổ. Lúc này các con chim diệc sẽ bắt các con côn trùng bay khỏi tổ làm thức ăn. Việc côn trùng bay khỏi tổ, cũng như việc chim diệc bắt côn trùng không ảnh hưởng gì đến ngựa vằn. Chim mỏ đỏ (một loài chim nhỏ) thường bắt ve bét trên lưng ngựa vằn làm thức ăn.<br>Khi xác định các mối quan hệ (1), (2), (3), (4), (5), (6) giữa từng cặp loài sinh vật, có 6 kết luận dưới đây.<br>(1) Quan hệ giữa ve bét và chim mỏ đỏ là mối quan hệ vật dữ - con mồi<br>(2) Quan hệ giữa chim mỏ đỏ và ngựa vằn là mối quan hệ hợp tác.<br>(3) Quan hệ giữa ngựa vằn và côn trùng là mối quan hệ ức chế cảm nhiễm ( hãm sinh).<br>(4) Quan hệ giữa côn trùng và chim diệc là mối quan hệ vật dữ - con mồi.<br>(5) Quan hệ giữa chim diệc và ngựa vằn là mối quan hệ hội sinh.<br>(6) Quan hệ giữa ngựa vằn và ve bét là mối quan hệ ký sinh – vật chủ.<br>Có bao nhiêu phát biểu đúng?", ans: "6", expl: "Theo đáp án trong ảnh là 6." },
+        { q: "Có bao nhiêu tượng sau đây không thuộc quan hệ đấu tranh cùng loài?<br>(1) Tự tỉa cành ở thực vật.<br>(2) Ăn thịt đồng loại.<br>(3) Cạnh tranh sinh học cùng loài.<br>(4) Quan hệ cộng sinh.<br>(5) Ức chế cảm nhiễm.", ans: "2", expl: "Theo đáp án trong ảnh là 2." },
+        { q: "Xét tập hợp sinh vật sau:<br>(1) Cá rô phi đơn tính ở trong hồ.<br>(2) Cá trắm cỏ trong ao.<br>(3) Sen trong đầm.<br>(4) Cây ở ven hồ.<br>(5) Chuột trong vườn.<br>(6) Bèo tấm trên mặt ao.<br>Có bao nhiêu tập hợp sinh vật là quần thể?", ans: "4", expl: "Theo đáp án trong ảnh là 4." },
+        { q: "Để nâng cao hiệu quả sử dụng hệ sinh thái, cần tập trung vào bao nhiêu hoạt động sau đây?<br>(1) Bón phân, tưới nước, diệt cỏ đối với các hệ sinh thái nông nghiệp.<br>(2) Loại bỏ các loài tảo độc, cá dữ trong các hệ sinh thái ao hồ nuôi tôm, cá.<br>(3) Xây dựng các hệ sinh thái nhân tạo một cách hợp lý.<br>(4) Tăng cường sử dụng các chất hóa học để tiêu diệt các loài sâu hại.", ans: "3", expl: "Theo đáp án trong ảnh là 3." },
+        { q: "Cho các phát biểu sau về chuỗi và lưới thức ăn:<br>(1) Chuỗi thức ăn trên cạn thường dài hơn dưới nước.<br>(2) Càng về xích đạo thì chuỗi thức ăn càng dài hơn so với ở hai cực.<br>(3) Quần xã càng đa dạng, số lượng cá thể mỗi loài ít nên chuỗi thức ăn càng ngắn và kém bền.<br>(4) Quần xã ít loài thì tính ổn định càng cao.<br>Có bao nhiêu phát biểu sai?", ans: "3", expl: "Theo đáp án trong ảnh là 3." },
+        { q: "Khi nói về quan hệ giữa các cá thể trong quần thể, lần lượt những nhận định nào dưới đây đúng (sắp xếp theo thứ tự từ nhỏ đến lớn)?<br>(1) Người ta ứng dụng quan hệ hỗ trợ giữa các cá thể của quần thể trong việc phòng hộ, chắn cát.<br>(2) Người ta ứng dụng mối quan hệ cạnh tranh giữa các cá thể của quần thể trong cả chăn nuôi và trồng trọt.<br>(3) Các cây thông trong rừng thông, đàn bò rừng, các loài cây gỗ sống trong rừng có các kiểu phân bố cùng là phân bố theo nhóm.<br>(4) Đặc điểm được xem là cơ bản nhất đối với quần thể là các cá thể cùng loài cùng sinh sống trong một khoảng không gian xác định.", ans: "1, 2, 4", expl: "Theo đáp án trong ảnh là 1, 2, 4." },
+        { q: "Cho hình ảnh sau: Dựa vào thông tin trong hình hãy cho biết có bao nhiêu nhận định dưới đây đúng?<br>(1) Đường cong tăng trưởng theo tiềm năng sinh học có dạng chữ J.<br>(2) Trong điều kiện môi trường lý tưởng thì mức sinh sản là tối đa và mức tử vong là tối thiểu, do đó sự tăng trưởng đạt tối đa.<br>(3) Trong điều kiện môi trường bị giới hạn, đường cong tăng trưởng có dạng chữ J.<br>(4) Thực tế có môi trường lí tưởng, nhiều loài kích thước cơ thể nhỏ, tuổi thọ thấp tăng trưởng gần với kiểu hàm mũ. Tuy nhiên, theo thời gian số lượng của chúng tăng rất nhanh nhưng thường giảm đột ngột ngay cả khi kích thước quần thể chưa đạt tối đa do chúng mẫn cảm với các tác động của các nhân tố hữu sinh.", img: "cau10_sa.png", ans: "2", expl: "Theo đáp án trong ảnh là 2." },
+        { q: "Khi nói đến tăng trưởng của quần thể sinh vật, có bao nhiêu nhận định dưới đây đúng?<br>(1) Quần thể tăng trưởng theo tiềm năng sinh học trong điều kiện môi trường hoàn toàn thuận lợi và tiềm năng sinh học của các cá thể cao.<br>(2) Mức độ sinh sản của quần thể sinh vật chỉ phụ thuộc vào thức ăn có trong môi trường.<br>(3) Mức độ tử vong là số lượng cá thể của quần thể bị chết trong một đơn vị thời gian.<br>(4) Đường cong tăng trưởng kinh tế có hình chữ J.", ans: "2", expl: "Theo đáp án trong ảnh là 2." },
+        { q: "Có bao nhiêu bằng chứng sau đây thuộc loại cơ quan được miêu tả trong hình?<br>(1) Gai xương rồng, tua cuốn của đậu Hà Lan đều là biến dạng của lá.<br>(2) Chi trước của các loài động vật có xương sống có các xương phân bố theo thứ tự tương tự nhau.<br>(3) Trong hoa đực của cây đu đủ có 10 nhị, ở giữa hoa vẫn còn di tích của nhụy.<br>(4) Gai cây hoàng liên là biến dạng của lá, gai cây hoa hồng là do sự phát triển của biểu bì thân.", img: "cau12_sa.png", ans: "1", expl: "Theo đáp án trong ảnh là 1." },
+        { q: "Có bao nhiêu bằng chứng không phải là bằng chứng giải phẫu học so sánh?<br>(1) Đa số các loài đều sử dụng chung một bộ mã di truyền.<br>(2) Xương chi dưới của các loài động vật có xương sống phân bố từ trong ra ngoài tương tự nhau.<br>(3) Sự tương đồng về phát triển phôi của một số loài động vật có xương sống.<br>(4) Ở các loài động vật có vú, đa số con đực vẫn còn còn di tích của tuyến sữa không hoạt động.<br>(5) Gai xương rồng và tua cuốn của đậu Hà Lan đều là biến dạng của lá.<br>(6) Cá voi còn di tích của xương đai hông, xương đùi và xương chày, hoàn toàn không dính tới cột sống.", ans: "2", expl: "Theo đáp án trong ảnh là 2." },
+        { q: "Ở một vùng biển, năng lượng bức xạ chiếu xuống mặt nước đạt đến 3 triệu kcal/m2/ngày. Tảo silic chỉ đồng hóa được 3% tổng năng lượng đó. Giáp xác trong hồ khai thác được 40% năng lượng tích lũy trong tảo, còn cá ăn giáp xác khai thác được 0,0015 năng lượng của giáp xác. Hiệu suất sử dụng năng lượng của bậc dinh dưỡng cuối cùng so với tổng năng lượng ban đầu là bao nhiêu?", ans: "0,0018%", expl: "Theo đáp án trong ảnh là 0,0018%." },
+        { q: "Ở một vùng biển, năng lượng bức xạ chiếu xuống mặt nước đạt đến 3 triệu kcal/m2/ngày. Tảo silic chỉ đồng hóa được 0,3% tổng năng lượng đó. Giáp xác trong hồ khai thác được 40% năng lượng tích lũy trong tảo, còn cá ăn giáp xác khai thác được 0,15% năng lượng của giáp xác. Hiệu suất chuyển hóa năng lượng của cá so với tảo silic là bao nhiêu?", ans: "0,06%", expl: "Theo đáp án trong ảnh là 0,06%." },
+        { q: "Sử dụng chuỗi thức ăn sau để xác định hiệu suất sinh thái của sinh vật tiêu thụ bậc 1 so với sinh vật sản xuất: Sinh vật sản xuất (2,1.106 calo) → sinh vật tiêu thụ bậc 1 (1,2.104 calo) → sinh vật tiêu thụ bậc 2 (1,1.102 calo) → sinh vật tiêu thụ bậc 3 (0,5.102 calo)?", ans: "0,57%", expl: "Theo đáp án trong ảnh là ≈ 0,57%." },
+        { q: "Sử dụng chuỗi thức ăn sau để xác định hiệu suất sinh thái của sinh vật tiêu thụ bậc 2 so với sinh vật tiêu thụ bậc 1 là: Sinh vật sản xuất (2,1.106 calo) → sinh vật tiêu thụ bậc 1 (1,2.104 calo) → sinh vật tiêu thụ bậc 2 (1,1.102 calo) → sinh vật tiêu thụ bậc 3 (0,5.102 calo)?", ans: "0,92%", expl: "Theo đáp án trong ảnh là ≈ 0,92%." },
+        { q: "Cho các thông tin về diễn thế sinh thái như sau:<br>I. Xuất hiện ở môi trường trống trơn (chưa có quần xã sinh vật từng sống)<br>II. Có sự biến đổi tuần tự của quần xã qua các giai đoạn tương ứng với sự biến đổi của MT<br>III. Song song với quá trình biến đổi quần xã trong diễn thế là quá trình biến đổi về các điều kiện tự nhiên của môi trường<br>IV. Kết quả cuối cùng sẽ hình thành một quần xã đỉnh cực<br>V. Song song với quá trình diễn thế, có sự biến đổi về cấu trúc của quần xã sinh vật<br>VI. Quá trình diễn thế có thể do tác động nhân tố bên ngoài của quần xã hoặc do tác động của quần xã<br>Trong các thông tin nói trên, diễn thế thứ sinh có bao nhiêu thông tin?", ans: "4", expl: "Theo đáp án trong ảnh là 4." },
+        { q: "Sử dụng chuỗi thức ăn sau để xác định hiệu suất sinh thái của sinh vật tiêu thụ bậc 3 so với sinh vật tiêu thụ bậc 1 là: Sinh vật sản xuất (2,1.106 calo) → sinh vật tiêu thụ bậc 1 (1,2.104 calo) → sinh vật tiêu thụ bậc 2 (1,1.102 calo) → sinh vật tiêu thụ bậc 3 (0,5.102 calo)?", ans: "0,42%", expl: "Theo đáp án trong ảnh là ≈ 0,42%." },
+        { q: "Giả sử trong một hồ tự nhiên, tảo là thức ăn của giáp xác; cá mương sử dụng giáp xác làm thức ăn đồng thời lại làm mồi cho cá quả. Cá quả tích lũy được 1152.103 kcal, tương đương 10% năng lượng tích lũy ở bậc dinh dưỡng thấp liền kề với nó. Cá mương tích lũy được một lượng năng lượng tương đương với 8% năng lượng tích lũy ở giáp xác. Tảo tích lũy được 12.108 kcal. Hiệu suất sinh thái giữa bậc dinh dưỡng cấp 2 và bậc dinh dưỡng cấp 1 là bao nhiêu %?", ans: "12%", expl: "Theo đáp án trong ảnh là 12%." }
+    ];
+
+    // ==========================================
+    // TRẠNG THÁI & HỆ THỐNG CHẤM ĐIỂM
+    // ==========================================
+    let currentMCQ = [], currentTF = [], currentSA = [];
+    let score = 0, answeredCount = 0, totalItems = 0;
+
+    const scoreEl = document.getElementById('score-count');
+    const answeredEl = document.getElementById('answered-count');
+    const totalEl = document.getElementById('total-count');
+
+    function init() {
+        totalItems = rawMCQ.length + rawTF.reduce((acc, q) => acc + q.s.length, 0) + rawSA.length;
+        totalEl.innerText = totalItems;
+        setMode('mcq', 'original');
+        setMode('tf', 'original');
+        setMode('sa', 'original');
+    }
+
+    function updateStats(scoreDiff, answeredDiff) {
+        score += scoreDiff;
+        answeredCount += answeredDiff;
+        scoreEl.innerText = score;
+        answeredEl.innerText = answeredCount;
+    }
+
+    function shuffleArray(array) {
+        let arr = JSON.parse(JSON.stringify(array));
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    function setMode(section, mode) {
+        document.getElementById(`btn-orig-${section}`).classList.remove('btn-action');
+        document.getElementById(`btn-rand-${section}`).classList.remove('btn-action');
+        
+        const doShuffle = (mode === 'random');
+        if (doShuffle) {
+            document.getElementById(`btn-rand-${section}`).classList.add('btn-action');
+        } else {
+            document.getElementById(`btn-orig-${section}`).classList.add('btn-action');
+        }
+
+        if (section === 'mcq') {
+            currentMCQ.forEach(q => { if (q.userAns !== undefined) updateStats(q.userAns === q.ans ? -1 : 0, -1); });
+            currentMCQ = doShuffle ? shuffleArray(rawMCQ) : JSON.parse(JSON.stringify(rawMCQ));
+            currentMCQ.forEach(q => {
+                if (doShuffle) {
+                    let optsWithIndex = q.opts.map((opt, idx) => ({ text: opt, isCorrect: idx === q.ans }));
+                    optsWithIndex = shuffleArray(optsWithIndex);
+                    q.opts = optsWithIndex.map(o => o.text);
+                    q.ans = optsWithIndex.findIndex(o => o.isCorrect);
+                }
+                q.userAns = undefined;
+            });
+            renderMCQ();
+        } 
+        else if (section === 'tf') {
+            currentTF.forEach(q => q.s.forEach(stmt => {
+                if (stmt.userAns !== undefined) updateStats(stmt.userAns === stmt.ans ? -1 : 0, -1);
+            }));
+            currentTF = doShuffle ? shuffleArray(rawTF) : JSON.parse(JSON.stringify(rawTF));
+            currentTF.forEach(q => {
+                if (doShuffle) q.s = shuffleArray(q.s);
+                q.s.forEach(stmt => stmt.userAns = undefined);
+            });
+            renderTF();
+        } 
+        else if (section === 'sa') {
+            currentSA.forEach(q => { if (q.userAns !== undefined) updateStats(q.isCorrect ? -1 : 0, -1); });
+            currentSA = doShuffle ? shuffleArray(rawSA) : JSON.parse(JSON.stringify(rawSA));
+            currentSA.forEach(q => { q.userAns = undefined; q.isCorrect = false; });
+            renderSA();
+        }
+    }
+
+    // ==========================================
+    // RENDER LÀM BÀI TRẮC NGHIỆM
+    // ==========================================
+    function renderMCQ() {
+        const container = document.getElementById('mcq-container');
+        container.innerHTML = '';
+        currentMCQ.forEach((item, qIdx) => {
+            let html = `<div class="question-card">
+                <div class="question-text">Câu ${qIdx + 1}: ${item.q}</div>`;
+            
+            if (item.img) {
+                html += `<div style="text-align: center; margin-bottom: 15px;">
+                            <img src="${item.img}" alt="Hình ảnh câu hỏi" style="max-width: 100%; max-height: 400px; border-radius: 8px;">
+                         </div>`;
+            }
+
+            item.opts.forEach((opt, oIdx) => {
+                html += `<div class="option" id="mcq_${qIdx}_${oIdx}" onclick="handleMCQ(${qIdx}, ${oIdx})">
+                    <span>${opt}</span>
+                    <span class="icon" id="mcq_icon_${qIdx}_${oIdx}"></span>
+                </div>`;
+            });
+            
+            html += `<div class="explanation" id="mcq_exp_${qIdx}"><strong>Giải thích:</strong> ${item.expl}</div></div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    function handleMCQ(qIdx, selectedOptIdx) {
+        const item = currentMCQ[qIdx];
+        const prevAns = item.userAns;
+        const expDiv = document.getElementById(`mcq_exp_${qIdx}`);
+
+        if (prevAns !== undefined) {
+            document.getElementById(`mcq_${qIdx}_${prevAns}`).className = 'option';
+            document.getElementById(`mcq_icon_${qIdx}_${prevAns}`).innerHTML = '';
+            document.getElementById(`mcq_${qIdx}_${item.ans}`).className = 'option';
+            document.getElementById(`mcq_icon_${qIdx}_${item.ans}`).innerHTML = '';
+            updateStats(prevAns === item.ans ? -1 : 0, -1);
+            expDiv.style.display = 'none';
+        }
+
+        if (prevAns === selectedOptIdx) {
+            item.userAns = undefined;
+            return;
+        }
+
+        item.userAns = selectedOptIdx;
+        const isCorrect = selectedOptIdx === item.ans;
+        updateStats(isCorrect ? 1 : 0, 1);
+        expDiv.style.display = 'block';
+
+        const selEl = document.getElementById(`mcq_${qIdx}_${selectedOptIdx}`);
+        const selIcon = document.getElementById(`mcq_icon_${qIdx}_${selectedOptIdx}`);
+        
+        if (isCorrect) {
+            selEl.classList.add('correct');
+            selIcon.innerHTML = '✔'; selIcon.className = 'icon correct-icon';
+        } else {
+            selEl.classList.add('incorrect');
+            selIcon.innerHTML = '✖'; selIcon.className = 'icon incorrect-icon';
+            const corrEl = document.getElementById(`mcq_${qIdx}_${item.ans}`);
+            const corrIcon = document.getElementById(`mcq_icon_${qIdx}_${item.ans}`);
+            corrEl.classList.add('correct');
+            corrIcon.innerHTML = '✔'; corrIcon.className = 'icon correct-icon';
+        }
+    }
+
+    // ==========================================
+    // RENDER LÀM BÀI ĐÚNG / SAI
+    // ==========================================
+    function renderTF() {
+        const container = document.getElementById('tf-container');
+        container.innerHTML = '';
+        currentTF.forEach((item, qIdx) => {
+            let html = `<div class="question-card"><div class="question-text">Câu ${qIdx + 1}: ${item.q}</div>`;
+            
+            if (item.img) {
+                html += `<div style="text-align: center; margin-bottom: 15px;">
+                            <img src="${item.img}" alt="Hình ảnh câu hỏi" style="max-width: 100%; max-height: 400px; border-radius: 8px;">
+                         </div>`;
+            }
+
+            item.s.forEach((stmt, sIdx) => {
+                html += `<div class="tf-row">
+                    <div class="tf-text">${stmt.txt}</div>
+                    <div class="tf-controls">
+                        <button class="tf-btn" id="tf_btn_${qIdx}_${sIdx}_true" onclick="handleTF(${qIdx}, ${sIdx}, true)">ĐÚNG</button>
+                        <button class="tf-btn" id="tf_btn_${qIdx}_${sIdx}_false" onclick="handleTF(${qIdx}, ${sIdx}, false)">SAI</button>
+                        <span class="icon" id="tf_icon_${qIdx}_${sIdx}" style="width: 20px; text-align: center;"></span>
+                    </div>
+                </div>
+                <div class="explanation" id="tf_exp_${qIdx}_${sIdx}" style="margin-top: 0; margin-bottom: 15px;"><strong>Giải thích:</strong> ${stmt.expl}</div>`;
+            });
+            html += `</div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    function handleTF(qIdx, sIdx, selectedVal) {
+        const stmt = currentTF[qIdx].s[sIdx];
+        const prevAns = stmt.userAns;
+        const expDiv = document.getElementById(`tf_exp_${qIdx}_${sIdx}`);
+        
+        const btnTrue = document.getElementById(`tf_btn_${qIdx}_${sIdx}_true`);
+        const btnFalse = document.getElementById(`tf_btn_${qIdx}_${sIdx}_false`);
+        btnTrue.className = 'tf-btn'; btnTrue.style.borderColor = ''; btnTrue.style.color = '';
+        btnFalse.className = 'tf-btn'; btnFalse.style.borderColor = ''; btnFalse.style.color = '';
+        document.getElementById(`tf_icon_${qIdx}_${sIdx}`).innerHTML = '';
+
+        if (prevAns !== undefined) {
+            updateStats(prevAns === stmt.ans ? -1 : 0, -1);
+            expDiv.style.display = 'none';
+        }
+
+        if (prevAns === selectedVal) {
+            stmt.userAns = undefined;
+            return;
+        }
+
+        stmt.userAns = selectedVal;
+        const isCorrect = selectedVal === stmt.ans;
+        updateStats(isCorrect ? 1 : 0, 1);
+        expDiv.style.display = 'block';
+
+        const btnStr = selectedVal ? 'true' : 'false';
+        const selBtn = document.getElementById(`tf_btn_${qIdx}_${sIdx}_${btnStr}`);
+        const icon = document.getElementById(`tf_icon_${qIdx}_${sIdx}`);
+
+        if (isCorrect) {
+            selBtn.classList.add('selected-correct');
+            icon.innerHTML = '✔'; icon.className = 'icon correct-icon';
+        } else {
+            selBtn.classList.add('selected-incorrect');
+            icon.innerHTML = '✖'; icon.className = 'icon incorrect-icon';
+            const corrBtnStr = stmt.ans ? 'true' : 'false';
+            document.getElementById(`tf_btn_${qIdx}_${sIdx}_${corrBtnStr}`).style.borderColor = 'var(--correct)';
+            document.getElementById(`tf_btn_${qIdx}_${sIdx}_${corrBtnStr}`).style.color = 'var(--correct)';
+        }
+    }
+
+    // ==========================================
+    // RENDER LÀM BÀI TRẢ LỜI NGẮN
+    // ==========================================
+    function renderSA() {
+        const container = document.getElementById('sa-container');
+        container.innerHTML = '';
+        currentSA.forEach((item, qIdx) => {
+            let html = `<div class="question-card">
+                <div class="question-text">Câu ${qIdx + 1}: ${item.q}</div>`;
+
+            if (item.img) {
+                html += `<div style="text-align: center; margin-bottom: 15px;">
+                            <img src="${item.img}" alt="Hình ảnh câu hỏi" style="max-width: 100%; max-height: 400px; border-radius: 8px;">
+                         </div>`;
+            }
+
+            html += `<div class="sa-wrap">
+                    <input type="text" class="sa-input" id="sa_input_${qIdx}" placeholder="Nhập đáp án và nhấn Kiểm tra...">
+                    <button class="btn btn-action" id="sa_btn_${qIdx}" onclick="handleSA(${qIdx})">Kiểm tra</button>
+                    <span class="icon" id="sa_icon_${qIdx}" style="width: 25px;"></span>
+                </div>
+                <div class="explanation" id="sa_exp_${qIdx}">
+                    <strong>Đáp án đúng:</strong> ${item.ans}<br>
+                    <strong>Giải thích:</strong> ${item.expl}
+                </div>
+            </div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    function handleSA(qIdx) {
+        const item = currentSA[qIdx];
+        const inputEl = document.getElementById(`sa_input_${qIdx}`);
+        const btnEl = document.getElementById(`sa_btn_${qIdx}`);
+        const iconEl = document.getElementById(`sa_icon_${qIdx}`);
+        const expDiv = document.getElementById(`sa_exp_${qIdx}`);
+
+        if (item.userAns !== undefined) {
+            updateStats(item.isCorrect ? -1 : 0, -1);
+            item.userAns = undefined;
+            item.isCorrect = false;
+            
+            inputEl.value = ''; inputEl.disabled = false; inputEl.className = 'sa-input';
+            iconEl.innerHTML = ''; btnEl.innerText = 'Kiểm tra';
+            btnEl.classList.add('btn-action'); expDiv.style.display = 'none';
+            return;
+        }
+
+        const rawVal = inputEl.value.trim();
+        if (!rawVal) { alert("Vui lòng nhập đáp án!"); return; }
+
+        const normalize = str => str.replace(/,/g, '.').replace(/\s+/g, '').toLowerCase();
+        item.userAns = rawVal;
+        item.isCorrect = normalize(rawVal) === normalize(item.ans);
+
+        updateStats(item.isCorrect ? 1 : 0, 1);
+        inputEl.disabled = true; btnEl.innerText = 'Làm lại';
+        btnEl.classList.remove('btn-action'); expDiv.style.display = 'block';
+
+        if (item.isCorrect) {
+            inputEl.classList.add('correct');
+            iconEl.innerHTML = '✔'; iconEl.className = 'icon correct-icon';
+        } else {
+            inputEl.classList.add('incorrect');
+            iconEl.innerHTML = '✖'; iconEl.className = 'icon incorrect-icon';
+        }
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>
